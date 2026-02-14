@@ -55,7 +55,7 @@ function App() {
               <li>✓ KI-Analyse</li>
               <li>✓ Priority Support</li>
             </ul>
-            <button className="w-full bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-500 transition transform hover:scale-105">
+            <button onClick={() => window.location.href = 'DEIN_STRIPE_LINK_HIER'} className="w-full bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-500 transition transform hover:scale-105">
               Jetzt abonnieren
             </button>
           </div>
