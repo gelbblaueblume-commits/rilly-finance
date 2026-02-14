@@ -56,31 +56,7 @@ function App() {
         <nav className="space-y-2">
           <button onClick={() => setView('dashboard')} className={`flex items-center gap-3 w-full p-3 rounded-lg ${view === 'dashboard' ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-white/5'}`}>
             <LayoutDashboard size={20} /> Dashboard
-          </button>
-          <button onClick={() => setView('pricing')} className={`flex items-center gap-3 w-full p-3 rounded-lg ${view === 'pricing' ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-white/5'}`}>
-            <Activity size={20} /> Upgrade
-          </button>
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
-        <header className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-medium text-slate-400">
-            {view === 'dashboard' ? 'Übersicht' : 'Premium'}
-          </h2>
-          <button onClick={() => setView('pricing')} className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-md font-bold text-sm">
-            Upgrade
-          </button>
-        </header>
-
-        {view === 'dashboard' ? (
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Guthaben Karte */}
-              <div className="bg-[#1e293b] rounded-xl border border-slate-700 p-8 shadow-lg">
-                <h3 className="text-sm font-semibold text-slate-400 uppercase mb-2">Guthaben</h3>
+          
                 <div className="text-5xl font-bold text-white mb-6">{formatCurrency(netWorth)}</div>
                 <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
                   <div className="h-full bg-blue-500 w-[70%]"></div>
