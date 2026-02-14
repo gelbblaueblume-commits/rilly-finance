@@ -1,66 +1,154 @@
 import React, { useState } from 'react';
+import { useDemoStore } from './store/demo-store';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
+import { Activity, LayoutDashboard, Settings, ShieldAlert, CreditCard } from 'lucide-react';
 import './App.css';
 
 function App() {
-  const [page, setPage] = useState('dashboard');
+  const [view, setView] = useState('dashboard');
+  const { netWorth, transactions } = useDemoStore();
+
+  // Währungs-Formatierer (macht aus 12450 -> 12.450,00 €)
+  const formatCurrency = (val) => 
+    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
+
+  // Fake-Daten für den Chart generieren
+  const mockChartData = Array.from({ length: 14 }).map((_, i) => ({
+    day: `Tag ${i + 1}`,
+    balance: netWorth - (Math.random() * 2000) + (Math.random() * 2000)
+  }));
 
   return (
-    <div className="p-6 md:p-12 max-w-6xl mx-auto">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center mb-12">
-        <h1 className="text-2xl font-bold text-blue-500">rilly Finance</h1>
-        <div className="space-x-4">
-          <button onClick={() => setPage('dashboard')} className="hover:text-blue-300 transition">Dashboard</button>
-          <button onClick={() => setPage('pricing')} className="bg-blue-600 px-5 py-2 rounded-lg font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-500/20">Upgrade</button>
-        </div>
-      </nav>
+    <div className="flex min-h-screen bg-[#0f172a] text-white font-sans">
+      
+      {/* --- SIDEBAR (Links) --- */}
+      <aside className="w-64 border-r border-slate-800 p-6 hidden md:flex flex-col bg-[#0f172a]">
+        <h1 className="text-2xl font-bold text-blue-500 mb-10 tracking-tight">rilly Finance</h1>
+        
+        <nav className="space-y-2 flex-1">
+          <button onClick={() => setView('dashboard')} className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all ${view === 'dashboard' ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:bg-white/5'}`}>
+            <LayoutDashboard size={18} /> <span className="font-medium">Dashboard</span>
+          </button>
+          <button onClick={() => setView('transactions')} className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all ${view === 'transactions' ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:bg-white/5'}`}>
+            <CreditCard size={18} /> <span className="font-medium">Transaktionen</span>
+          </button>
+          <button onClick={() => setView('pricing')} className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all ${view === 'pricing' ? 'bg-blue-600/10 text-blue-400' : 'text-slate-400 hover:bg-white/5'}`}>
+            <Activity size={18} /> <span className="font-medium">Upgrade</span>
+          </button>
+        </nav>
 
-      {/* Hauptbereich */}
-      {page === 'dashboard' ? (
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="glass-card p-8">
-            <p className="text-gray-400 text-sm uppercase tracking-wider">Verfügbares Guthaben</p>
-            <h2 className="text-5xl font-bold mt-2">€ 12.450,00</h2>
-            <div className="mt-6 h-2 bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 w-3/4"></div>
+        <div className="mt-auto pt-6 border-t border-slate-800 space-y-2">
+          <button className="flex items-center gap-3 w-full p-3 text-slate-500 hover:text-white transition-colors">
+            <Settings size={18} /> Einstellungen
+          </button>
+        </div>
+      </aside>
+
+      {/* --- HAUPTBEREICH (Rechts) --- */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* Header */}
+        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-[#0f172a]/50 backdrop-blur-md">
+          <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+            {view === 'dashboard' ? 'Finanzübersicht' : 'Premium Plan'}
+          </h2>
+          <button onClick={() => setView('pricing')} className="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-md font-medium text-sm transition-colors shadow-lg shadow-blue-900/20">
+            Upgrade
+          </button>
+        </header>
+
+        {/* Scrollbarer Content */}
+        <div className="flex-1 overflow-y-auto p-8">
+          
+          {view === 'dashboard' ? (
+            <div className="max-w-6xl mx-auto space-y-6">
+              
+              {/* Grid für Balance und Aktivität */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* KARTE 1: Kontostand */}
+                <div className="bg-[#1e293b] rounded-xl border border-slate-700 p-8 shadow-xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <LayoutDashboard size={100} />
+                  </div>
+                  <h3 className="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-2">Verfügbares Guthaben</h3>
+                  <div className="text-5xl font-bold text-white mb-6">{formatCurrency(netWorth)}</div>
+                  <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 w-[70%] rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                  </div>
+                </div>
+
+                {/* KARTE 2: Transaktionen */}
+                <div className="bg-[#1e293b] rounded-xl border border-slate-700 p-8 shadow-xl">
+                  <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                    <Activity size={20} className="text-blue-500"/> Letzte Aktivitäten
+                  </h3>
+                  <div className="space-y-4">
+                    {transactions.slice(0, 3).map((tx) => (
+                      <div key={tx.id} className="flex items-center justify-between border-b border-slate-800/50 pb-3 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-medium text-slate-200">{tx.merchant}</p>
+                          <p className="text-xs text-slate-500">{tx.date}</p>
+                        </div>
+                        <div className={`font-bold ${tx.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {tx.amount > 0 ? '+' : ''} {formatCurrency(tx.amount)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* KARTE 3: Der Chart (Das Highlight) */}
+              <div className="bg-[#1e293b] rounded-xl border border-slate-700 p-8 shadow-xl">
+                 <h3 className="text-lg font-bold text-white mb-6">Vermögensverlauf (14 Tage)</h3>
+                 <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={mockChartData}>
+                        <defs>
+                          <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', color: '#fff' }}
+                        />
+                        <Area type="monotone" dataKey="balance" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorBalance)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                 </div>
+              </div>
+
             </div>
-          </div>
-          
-          <div className="glass-card p-8">
-            <h3 className="text-xl font-bold mb-4">Letzte Aktivitäten</h3>
-            <ul className="space-y-3">
-              <li className="flex justify-between text-sm border-b border-white/10 pb-2">
-                <span>Apple Store</span> <span className="text-red-400">- € 1.299,00</span>
-              </li>
-              <li className="flex justify-between text-sm border-b border-white/10 pb-2">
-                <span>Stripe Payout</span> <span className="text-green-400">+ € 4.500,00</span>
-              </li>
-              <li className="flex justify-between text-sm">
-                <span>Server Kosten</span> <span className="text-red-400">- € 29,00</span>
-              </li>
-            </ul>
-          </div>
+          ) : (
+            /* --- PRICING PAGE --- */
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="max-w-md w-full bg-[#1e293b] rounded-2xl border border-blue-500/30 p-8 shadow-2xl relative">
+                <div className="absolute top-0 right-0 bg-blue-600 text-xs font-bold px-3 py-1 rounded-bl-xl uppercase tracking-wider">Empfohlen</div>
+                
+                <h2 className="text-2xl font-bold text-white mb-2">Pro Cloud Access</h2>
+                <div className="text-4xl font-bold text-blue-400 mb-6">€ 9,99 <span className="text-sm text-slate-500 font-normal">/Monat</span></div>
+                
+                <ul className="space-y-4 text-slate-300 mb-8">
+                  <li className="flex items-center gap-3"><span className="text-emerald-400">✓</span> Unbegrenzte Charts</li>
+                  <li className="flex items-center gap-3"><span className="text-emerald-400">✓</span> 3 Jahre Historie</li>
+                  <li className="flex items-center gap-3"><span className="text-emerald-400">✓</span> KI-Spar-Assistent</li>
+                </ul>
+
+                <button 
+                  onClick={() => window.location.href = 'DEIN_STRIPE_LINK_HIER'}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition-all hover:scale-[1.02] shadow-lg shadow-blue-600/20"
+                >
+                  Jetzt abonnieren
+                </button>
+                <p className="text-xs text-center text-slate-600 mt-4">Sicher bezahlen via Stripe SSL</p>
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="text-center py-10">
-          <h2 className="text-4xl font-bold mb-4">Wähle deinen Plan</h2>
-          <p className="text-gray-400 mb-10">Schalte alle Features frei.</p>
-          
-          <div className="glass-card p-8 max-w-md mx-auto border border-blue-500/50 relative">
-            <div className="absolute top-0 right-0 bg-blue-600 text-xs font-bold px-2 py-1">BESTSELLER</div>
-            <h3 className="text-2xl font-bold text-blue-400">Pro Cloud</h3>
-            <p className="text-5xl font-bold my-6">€ 9,99<span className="text-lg font-normal text-gray-400">/Monat</span></p>
-            <ul className="text-left space-y-3 mb-8 text-gray-300">
-              <li>✓ Unbegrenzte Transaktionen</li>
-              <li>✓ KI-Analyse</li>
-              <li>✓ Priority Support</li>
-            </ul>
-            <button onClick={() => window.location.href = 'DEIN_STRIPE_LINK_HIER'} className="w-full bg-blue-600 py-4 rounded-xl font-bold hover:bg-blue-500 transition transform hover:scale-105">
-              Jetzt abonnieren
-            </button>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 }
