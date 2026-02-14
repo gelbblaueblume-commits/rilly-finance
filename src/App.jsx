@@ -1,211 +1,190 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { LayoutDashboard, CreditCard, Activity, Settings, ArrowUpRight, ArrowDownRight, ShieldCheck, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AreaChart, Area, ResponsiveContainer, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { LayoutDashboard, Activity, ShieldCheck, Zap, Save, Trash2, ArrowUpRight, ArrowDownRight, Target } from 'lucide-react';
 
-/* --- DAS IST DEINE FERTIGE APP --- */
+/* --- DATEN-KONFIGURATION --- */
+const DEMO_DATA = {
+  liquidity: 142500.00,
+  inflow: 24500.00,
+  outflow: 8450.00,
+  activities: [
+    { id: 1, name: 'Rolex Boutique', date: '2026-02-12', amount: -12500, type: 'luxury' },
+    { id: 2, name: 'Tesla Dividend', date: '2026-02-10', amount: 4500, type: 'income' },
+    { id: 3, name: 'Private Jet Charter', date: '2026-02-05', amount: -8500, type: 'luxury' },
+    { id: 4, name: 'Real Estate Rent', date: '2026-02-01', amount: 12000, type: 'income' }
+  ],
+  goals: [
+    { name: 'Villa Fund', current: 450000, target: 2500000, color: '#eab308' },
+    { name: 'Yacht Maintenance', current: 15000, target: 50000, color: '#22c55e' },
+    { name: 'Angel Investing', current: 50000, target: 500000, color: '#a855f7' }
+  ]
+};
+
+const EMPTY_DATA = { liquidity: 0, inflow: 0, outflow: 0, activities: [], goals: [] };
+
 export default function App() {
-  const [view, setView] = useState('dashboard'); // Steuert, ob Dashboard oder Upgrade gezeigt wird
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
-  // HIER SIND DEINE DATEN (Du kannst die Zahlen ändern, wenn du willst)
-  const [balance] = useState(12450.00);
-  const [transactions] = useState([
-    { id: 1, name: 'Apple Store', date: 'Heute, 14:30', amount: -1299.00, type: 'expense' },
-    { id: 2, name: 'Gehaltseingang', date: 'Gestern, 09:00', amount: 4500.00, type: 'income' },
-    { id: 3, name: 'Spotify Abo', date: '12.02.2026', amount: -14.99, type: 'expense' },
-    { id: 4, name: 'Amazon AWS', date: '10.02.2026', amount: -85.20, type: 'expense' },
-    { id: 5, name: 'Dividende', date: '05.02.2026', amount: 320.50, type: 'income' },
-  ]);
+  const [isDemo, setIsDemo] = useState(false);
+  const [shouldSave, setShouldSave] = useState(false);
+  const [view, setView] = useState('dashboard');
+  const [data, setData] = useState(EMPTY_DATA);
 
-  // Fake-Daten für den Chart (simuliert einen Verlauf)
-  const chartData = [
-    { name: 'Mo', value: 11200 }, { name: 'Di', value: 11800 },
-    { name: 'Mi', value: 11500 }, { name: 'Do', value: 12100 },
-    { name: 'Fr', value: 12300 }, { name: 'Sa', value: 12400 },
-    { name: 'So', value: 12450 },
-  ];
+  // Initiales Laden & Persistence Logik
+  useEffect(() => {
+    const saved = localStorage.getItem('rilly_user_data');
+    if (saved) {
+      setData(JSON.parse(saved));
+      setShouldSave(true);
+    }
+  }, []);
 
-  // Formatiert Euro-Beträge schön (z.B. 12.450,00 €)
-  const formatMoney = (amount) => {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
+  // Speicher-Watcher
+  useEffect(() => {
+    if (shouldSave && !isDemo) {
+      localStorage.setItem('rilly_user_data', JSON.stringify(data));
+    } else if (!shouldSave) {
+      localStorage.removeItem('rilly_user_data');
+    }
+  }, [data, shouldSave, isDemo]);
+
+  const toggleDemo = () => {
+    setIsDemo(!isDemo);
+    setData(!isDemo ? DEMO_DATA : EMPTY_DATA);
   };
 
+  const formatEuro = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
+
   return (
-    <div className="flex h-screen bg-[#0f172a] text-white font-sans overflow-hidden">
-      
-      {/* --- SIDEBAR (Links) --- */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 border-r border-slate-800 bg-[#0f172a] flex flex-col hidden md:flex`}>
-        <div className="p-6 flex items-center gap-3">
-          <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">R</div>
-          {isSidebarOpen && <span className="font-bold text-xl tracking-tight">rilly</span>}
-        </div>
-        
-        <nav className="flex-1 px-4 space-y-2 mt-4">
-          <SidebarItem icon={<LayoutDashboard size={20}/>} text="Übersicht" active={view === 'dashboard'} onClick={() => setView('dashboard')} full={isSidebarOpen} />
-          <SidebarItem icon={<CreditCard size={20}/>} text="Transaktionen" active={view === 'transactions'} onClick={() => setView('transactions')} full={isSidebarOpen} />
-          <SidebarItem icon={<Activity size={20}/>} text="Upgrade" active={view === 'upgrade'} onClick={() => setView('upgrade')} full={isSidebarOpen} highlight />
-        </nav>
+    <div className="min-h-screen bg-[#050505] text-[#e5e5e5] font-sans selection:bg-blue-500/30">
+      <AnimatePresence>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="flex h-screen overflow-hidden"
+        >
+          {/* SIDEBAR */}
+          <aside className="w-72 border-r border-white/5 bg-[#0a0a0a] p-8 flex flex-col gap-10">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg shadow-blue-900/20 flex items-center justify-center font-serif italic text-2xl">R</div>
+              <span className="text-2xl font-bold tracking-tighter">rilly<span className="text-blue-500">.</span></span>
+            </div>
 
-        <div className="p-4 border-t border-slate-800">
-           <SidebarItem icon={<Settings size={20}/>} text="Einstellungen" full={isSidebarOpen} />
-        </div>
-      </aside>
-
-      {/* --- HAUPTBEREICH (Rechts) --- */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        
-        {/* Header für Mobile & Desktop */}
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-[#0f172a]/80 backdrop-blur-md z-10">
-          <div className="md:hidden text-white font-bold text-xl">rilly</div>
-          <div className="flex items-center gap-4 ml-auto">
-             <button onClick={() => setView('upgrade')} className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-               Pro Plan
-             </button>
-             <div className="h-8 w-8 bg-slate-700 rounded-full border border-slate-600"></div>
-          </div>
-        </header>
-
-        {/* --- INHALT --- */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#0f172a]">
-          
-          {view === 'dashboard' ? (
-            /* DASHBOARD ANSICHT */
-            <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <nav className="flex flex-col gap-2 flex-1">
+              <NavBtn icon={<LayoutDashboard size={20}/>} label="Wealth" active={view === 'dashboard'} onClick={() => setView('dashboard')} />
+              <NavBtn icon={<Activity size={20}/>} label="Analytics" active={view === 'analytics'} onClick={() => setView('analytics')} />
+              <div className="mt-8 mb-2 text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold">System</div>
               
-              {/* Top Bereich: Guthaben & Chart */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Guthaben Karte */}
-                <div className="lg:col-span-1 bg-[#1e293b] rounded-2xl p-6 border border-slate-700 shadow-xl relative overflow-hidden">
-                   <div className="absolute top-0 right-0 p-4 opacity-5"><LayoutDashboard size={120}/></div>
-                   <h3 className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-1">Gesamtvermögen</h3>
-                   <div className="text-4xl font-bold text-white mb-4">{formatMoney(balance)}</div>
-                   <div className="flex items-center gap-2 text-emerald-400 text-sm bg-emerald-400/10 w-fit px-2 py-1 rounded-md mb-6">
-                     <ArrowUpRight size={16}/> +2.4% diesen Monat
-                   </div>
-                   <button onClick={() => setView('upgrade')} className="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">
-                     Analyse ansehen
-                   </button>
-                </div>
+              {/* DEMO SWITCH */}
+              <button onClick={toggleDemo} className={`flex items-center gap-3 p-4 rounded-2xl transition-all ${isDemo ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'hover:bg-white/5 text-white/50'}`}>
+                <Zap size={20} fill={isDemo ? "currentColor" : "none"}/>
+                <span className="font-semibold text-sm">{isDemo ? 'Stop Demo' : 'Start Demo'}</span>
+              </button>
 
-                {/* Chart Karte */}
-                <div className="lg:col-span-2 bg-[#1e293b] rounded-2xl p-6 border border-slate-700 shadow-xl">
-                  <h3 className="text-slate-200 font-bold mb-4">Verlauf (7 Tage)</h3>
-                  <div className="h-[200px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
-                        <defs>
-                          <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <Tooltip contentStyle={{backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px'}} itemStyle={{color: '#fff'}}/>
-                        <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fill="url(#colorVal)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
+              {/* SAVE SWITCH */}
+              <button onClick={() => setShouldSave(!shouldSave)} className={`flex items-center gap-3 p-4 rounded-2xl transition-all ${shouldSave ? 'bg-blue-500/10 text-blue-500' : 'hover:bg-white/5 text-white/50'}`}>
+                <Save size={20}/>
+                <span className="font-semibold text-sm">{shouldSave ? 'Auto-Save ON' : 'Save Session'}</span>
+              </button>
+            </nav>
+
+            <button onClick={() => window.location.href = 'DEIN_STRIPE_LINK'} className="group relative overflow-hidden bg-white text-black p-4 rounded-2xl font-bold transition-all hover:scale-[1.02]">
+              <span className="relative z-10 flex items-center justify-center gap-2">Upgrade Pro <ArrowUpRight size={18}/></span>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </aside>
+
+          {/* MAIN CONTENT */}
+          <main className="flex-1 overflow-y-auto p-12 bg-gradient-to-b from-[#0a0a0a] to-[#050505]">
+            <header className="flex justify-between items-end mb-12">
+              <div>
+                <h1 className="text-4xl font-serif mb-2">Guten Tag,</h1>
+                <p className="text-white/40 font-medium">Hier ist Ihre finanzielle Übersicht.</p>
+              </div>
+              {isDemo && <div className="px-4 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full text-xs font-bold uppercase tracking-widest">Demo Mode Active</div>}
+            </header>
+
+            <div className="grid grid-cols-12 gap-8">
+              {/* STAT CARDS */}
+              <StatCard col="span-4" label="Liquidity" value={formatEuro(data.liquidity)} sub="+4.2% this month" trend="up" />
+              <StatCard col="span-4" label="Monthly Inflow" value={formatEuro(data.inflow)} sub="Dividends & Rent" trend="up" />
+              <StatCard col="span-4" label="Monthly Outflow" value={formatEuro(data.outflow)} sub="Luxury & Services" trend="down" />
+
+              {/* RECENT ACTIVITY */}
+              <div className="col-span-8 bg-[#0d0d0d] rounded-[2rem] border border-white/5 p-10 shadow-2xl">
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="text-2xl font-serif">Recent Activity</h2>
+                  <button className="text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors">View All</button>
+                </div>
+                <div className="space-y-6">
+                  {data.activities.length > 0 ? data.activities.map((act) => (
+                    <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} key={act.id} className="flex items-center justify-between group">
+                      <div className="flex items-center gap-5">
+                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${act.amount < 0 ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                          {act.amount < 0 ? <ArrowUpRight size={24}/> : <ArrowDownRight size={24}/>}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-lg group-hover:text-blue-400 transition-colors">{act.name}</h4>
+                          <p className="text-sm text-white/30 font-medium">{act.date}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xl font-serif ${act.amount < 0 ? 'text-white' : 'text-emerald-400'}`}>
+                        {act.amount > 0 ? '+' : ''}{formatEuro(act.amount)}
+                      </span>
+                    </motion.div>
+                  )) : <div className="text-white/20 py-10 text-center italic">Keine Transaktionen vorhanden. Drücken Sie "Start Demo".</div>}
                 </div>
               </div>
 
-              {/* Transaktionsliste */}
-              <div className="bg-[#1e293b] rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
-                <div className="p-6 border-b border-slate-700 flex justify-between items-center">
-                  <h3 className="font-bold text-lg">Letzte Aktivitäten</h3>
-                  <button className="text-blue-400 text-sm hover:text-blue-300">Alle anzeigen</button>
-                </div>
-                <div>
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="p-4 flex justify-between items-center hover:bg-white/5 transition-colors border-b border-slate-700/50 last:border-0">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${tx.type === 'income' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>
-                          {tx.type === 'income' ? <ArrowDownRight size={20}/> : <ArrowUpRight size={20}/>}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-200">{tx.name}</p>
-                          <p className="text-xs text-slate-500">{tx.date}</p>
-                        </div>
+              {/* GOALS */}
+              <div className="col-span-4 bg-[#0d0d0d] rounded-[2rem] border border-white/5 p-10 flex flex-col gap-8">
+                <h2 className="text-2xl font-serif flex items-center gap-3"><Target className="text-blue-500"/> Goals</h2>
+                <div className="space-y-8 flex-1">
+                  {data.goals.map((goal, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-sm mb-3">
+                        <span className="font-bold text-white/60">{goal.name}</span>
+                        <span className="font-serif italic">{formatEuro(goal.current)}</span>
                       </div>
-                      <span className={`font-bold ${tx.type === 'income' ? 'text-emerald-400' : 'text-slate-200'}`}>
-                        {tx.amount > 0 ? '+' : ''} {formatMoney(tx.amount)}
-                      </span>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }} 
+                          animate={{ width: `${(goal.current / goal.target) * 100}%` }} 
+                          className="h-full rounded-full" 
+                          style={{ backgroundColor: goal.color }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-
-            </div>
-          ) : (
-            /* UPGRADE ANSICHT */
-            <div className="max-w-4xl mx-auto py-10 animate-in zoom-in-95 duration-500">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
-                  Upgrade auf Pro
-                </h2>
-                <p className="text-slate-400 max-w-lg mx-auto">
-                  Entfessle das volle Potenzial deiner Finanzen mit KI-Analysen, unbegrenzter Historie und Priority Support.
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Free Plan */}
-                <div className="bg-[#1e293b]/50 p-8 rounded-2xl border border-slate-700 flex flex-col">
-                  <h3 className="text-xl font-bold text-slate-400">Starter</h3>
-                  <div className="text-3xl font-bold mt-2 mb-6">Gratis</div>
-                  <ul className="space-y-4 mb-8 flex-1">
-                    <li className="flex gap-3 text-slate-300"><ShieldCheck className="text-slate-500"/> Grundlegende Charts</li>
-                    <li className="flex gap-3 text-slate-300"><ShieldCheck className="text-slate-500"/> 5 Transaktionen</li>
-                  </ul>
-                  <button onClick={() => setView('dashboard')} className="w-full py-3 rounded-xl border border-slate-600 hover:bg-slate-700 transition-colors font-medium">
-                    Zurück zum Dashboard
-                  </button>
-                </div>
-
-                {/* PRO Plan (Der Verkaufsschlager) */}
-                <div className="bg-gradient-to-b from-blue-900/40 to-[#1e293b] p-8 rounded-2xl border border-blue-500 shadow-[0_0_40px_rgba(37,99,235,0.15)] relative flex flex-col transform md:scale-105">
-                  <div className="absolute top-0 right-0 bg-blue-600 text-xs font-bold px-3 py-1 rounded-bl-xl uppercase">Empfohlen</div>
-                  <h3 className="text-xl font-bold text-blue-400">Pro Cloud</h3>
-                  <div className="text-4xl font-bold mt-2 mb-1">9,99 €</div>
-                  <div className="text-sm text-slate-400 mb-6">pro Monat</div>
-                  
-                  <ul className="space-y-4 mb-8 flex-1">
-                    <li className="flex gap-3 text-white"><ShieldCheck className="text-blue-400"/> <b>Unbegrenzte</b> Historie</li>
-                    <li className="flex gap-3 text-white"><ShieldCheck className="text-blue-400"/> KI-Spar-Analysen</li>
-                    <li className="flex gap-3 text-white"><ShieldCheck className="text-blue-400"/> CSV Export für Steuer</li>
-                  </ul>
-                  
-                  <button 
-                    /* HIER LINK EINFÜGEN */
-                    onClick={() => window.location.href = 'DEIN_STRIPE_LINK_HIER'}
-                    className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-blue-600/25"
-                  >
-                    Jetzt abonnieren
-                  </button>
-                  <p className="text-center text-xs text-slate-500 mt-4">Jederzeit kündbar. Sichere Zahlung.</p>
+                <div className="bg-emerald-500/10 p-4 rounded-2xl flex items-center justify-between border border-emerald-500/10">
+                  <span className="text-xs font-bold uppercase text-emerald-500">Sentiment</span>
+                  <span className="text-sm font-bold">Greedy 🦁</span>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      </main>
+          </main>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
 
-// Kleine Hilfskomponente für die Sidebar
-function SidebarItem({ icon, text, active, onClick, full, highlight }) {
+function NavBtn({ icon, label, active, onClick }) {
   return (
-    <button 
-      onClick={onClick}
-      className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all duration-200 group
-        ${active 
-          ? 'bg-blue-600/10 text-blue-400 shadow-inner' 
-          : 'text-slate-400 hover:bg-white/5 hover:text-white'}
-        ${highlight ? 'mt-6 border border-blue-500/20' : ''}
-      `}
-    >
-      <div className={active || highlight ? 'text-blue-400' : 'group-hover:text-white'}>{icon}</div>
-      {full && <span className={`font-medium ${active ? 'text-blue-400' : ''}`}>{text}</span>}
+    <button onClick={onClick} className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}>
+      {icon} <span className="font-bold text-sm tracking-tight">{label}</span>
     </button>
+  );
+}
+
+function StatCard({ label, value, sub, trend, col }) {
+  return (
+    <div className={`${col} bg-[#0d0d0d] rounded-[2rem] border border-white/5 p-8 hover:border-white/20 transition-all group`}>
+      <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold mb-4">{label}</p>
+      <h3 className="text-3xl font-serif mb-2 group-hover:text-blue-400 transition-colors">{value}</h3>
+      <p className={`text-xs font-bold ${trend === 'up' ? 'text-emerald-500' : 'text-red-500'} flex items-center gap-1`}>
+        {trend === 'up' ? <ArrowUpRight size={14}/> : <ArrowDownRight size={14}/>} {sub}
+      </p>
+    </div>
   );
 }
