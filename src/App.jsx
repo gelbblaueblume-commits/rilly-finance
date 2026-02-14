@@ -56,16 +56,7 @@ function App() {
         <nav className="space-y-2">
           <button onClick={() => setView('dashboard')} className={`flex items-center gap-3 w-full p-3 rounded-lg ${view === 'dashboard' ? 'bg-blue-600/20 text-blue-400' : 'hover:bg-white/5'}`}>
             <LayoutDashboard size={20} /> Dashboard
-          
-                <div className="text-5xl font-bold text-white mb-6">{formatCurrency(netWorth)}</div>
-                <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 w-[70%]"></div>
-                </div>
-              </div>
-
-              {/* Chart Karte */}
-              <div className="bg-[#1e293b] rounded-xl border border-slate-700 p-8 shadow-lg">
-                <h3 className="text-lg font-bold mb-4">Verlauf</h3>
+                
                 <div className="h-[150px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>
