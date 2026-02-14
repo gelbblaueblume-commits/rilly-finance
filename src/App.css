@@ -2,18 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --glow-blue: rgba(59, 130, 246, 0.5);
+  --glow-emerald: rgba(16, 185, 129, 0.5);
+}
+
 body {
-  background: radial-gradient(circle at top right, #1e293b, #0f172a);
-  color: white;
-  min-height: 100vh;
-  margin: 0;
-  font-family: sans-serif;
+  @apply bg-[#050505] text-slate-200 antialiased;
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+}
+
+.neo-glow-blue {
+  box-shadow: 0 0 20px var(--glow-blue);
+}
+
+.luxury-serif {
+  font-family: 'Playfair Display', serif; /* Falls geladen, sonst Standard Serif */
+}
+
+/* Custom Scrollbar für den Elite-Look */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }
